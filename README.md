@@ -1,51 +1,68 @@
-    ""module AutomatedScheduling::DoctorScheduler {
+    ""# Automated Doctor Scheduling Smart Contract
 
-    use aptos_framework::signer;
-    use aptos_framework::event;
+This is a Move smart contract for an **Automated Doctor Scheduling dApp** built on the Aptos blockchain. The contract allows doctors to create schedules with available appointment slots and lets patients book those slots securely.
 
-    /// Struct representing a doctor's schedule.
-    struct Schedule has store, key {
-        slots_available: u64,
-    }   
+## Functionalities
 
-    /// Event for booking confirmation.
-    struct AppointmentBookedEvent has drop, store {
-        patient: address,
-        slots_remaining: u64,
-    }
+1. **create\_schedule**
 
-    /// Event handle for appointment booking.
-    struct AppointmentEvents has store {
-        event_handle: event::EventHandle<AppointmentBookedEvent>,
-    }
+   * Allows a doctor to create an appointment schedule with a specified number of available slots.
+   * Stores the schedule on the blockchain under the doctor's address.
 
-    /// Function for doctors to create their available schedule.
-    public fun create_schedule(doctor: &signer, slots: u64) {
-        let schedule = Schedule {
-            slots_available: slots,
-        };
-        move_to(doctor, schedule);
+   **Parameters:**
 
-        let event_handle = AppointmentEvents {
-            event_handle: event::new_event_handle<AppointmentBookedEvent>(doctor),
-        };
-        move_to(doctor, event_handle);
-    }
+   * `doctor`: The signer's address representing the doctor.
+   * `slots`: The number of available appointment slots.
 
-    /// Function for patients to book an available slot.
-    public fun book_appointment(patient: &signer, doctor: address) acquires Schedule, AppointmentEvents {
-        let schedule = borrow_global_mut<Schedule>(doctor);
-        let events = borrow_global_mut<AppointmentEvents>(doctor);
+   **Usage Example:**
 
-        assert!(schedule.slots_available > 0, 0x1); // Ensure slots are available
-        schedule.slots_available = schedule.slots_available - 1;
+   ```move
+   AutomatedScheduling::DoctorScheduler::create_schedule(&signer, 10);
+   ```
 
-        event::emit_event(
-            &mut events.event_handle,
-            AppointmentBookedEvent {
-                patient: signer::address_of(patient),
-                slots_remaining: schedule.slots_available,
-            }
-        );
-    }
-}""
+2. **book\_appointment**
+
+   * Allows a patient to book an available slot from a doctor's schedule.
+   * Reduces the available slots count and emits an event.
+
+   **Parameters:**
+
+   * `patient`: The signer's address representing the patient.
+   * `doctor`: The address of the doctor whose schedule is being booked.
+
+   **Usage Example:**
+
+   ```move
+   AutomatedScheduling::DoctorScheduler::book_appointment(&signer, 0xDoctorAddress);
+   ```
+
+## Events
+
+* **AppointmentBookedEvent**:
+
+  * Emitted when a patient successfully books an appointment.
+  * Contains:
+
+    * `patient`: The address of the patient who booked.
+    * `slots_remaining`: The remaining available slots after booking.
+
+## Deployment
+
+To deploy this contract:
+
+1. Compile the module.
+2. Deploy it to the Aptos blockchain with the appropriate signer.
+3. Interact using the Move CLI or Aptos Explorer.
+
+## Testing
+
+You can use Move Prover and Aptos CLI to test interactions:
+
+```bash
+move test
+```
+
+## License
+
+MIT License
+""
